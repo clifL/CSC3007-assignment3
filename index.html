@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!-- saved from url=(0072)https://chi-loong.github.io/CSC3007/assignments/assignment3-starter.html -->
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <style></style>
+</head>
+
+<body>
+    <svg></svg>
+    <div class="tooltip"></div>
+    <script src="./index_files/d3.v7.min.js.download"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
+
+    <script>
+        let width = 1000,
+            height = 600;
+
+        let svg = d3.select("svg").attr("viewBox", "0 0 " + width + " " + height);
+
+        // Load external data
+        Promise.all([d3.json("sgmap.json"), d3.csv("population2021.csv")]).then(
+            (data) => {
+                var found = false;
+
+                for (let x = 0; x < data[0].features.length; x++) {
+                    for (let i = 0; i < data[1].length; i++) {
+                        if (
+                            data[0].features[x].properties.Name.toUpperCase() ===
+                            data[1][i].Subzone.toUpperCase()
+                        ) {
+                            found = true;
+                            data[0].features[x].properties.population = data[1][i].Population;
+                            if (data[1][i].Population >= 102008) {
+                                data[0].features[x].properties.colorId = 4;
+                            } else if (data[1][i].Population >= 76506) {
+                                data[0].features[x].properties.colorId = 3;
+                            } else if (data[1][i].Population >= 51004) {
+                                data[0].features[x].properties.colorId = 2;
+                            } else if (data[1][i].Population >= 25502) {
+                                data[0].features[x].properties.colorId = 1;
+                            } else {
+                                data[0].features[x].properties.colorId = 0;
+                            }
+                            break;
+                        }
+                    }
+                    if (found == false) {
+                        data[0].features[x].properties.population = "-";
+                        data[0].features[x].properties.colorId = 0;
+                    }
+                    found = false;
+                }
+
+
+                //console.log()
+                //console.log(data[0]);
+                //d.properties.Name.toUpperCase()
+                function getColorCode(subname) {
+                    for (let x = 0; x < data[0].features.length; x++) {
+                        if (data[0].features[x].properties.Name.toUpperCase() === subname.toUpperCase()) {
+                            return data[0].features[x].properties.colorId
+                        }
+                    }
+                }
+
+                function getPopuluation(subname) {
+                    for (let x = 0; x < data[0].features.length; x++) {
+                        if (data[0].features[x].properties.Name.toUpperCase() === subname.toUpperCase()) {
+                            return data[0].features[x].properties.population
+                        }
+                    }
+                }
+
+
+                // Map and projection
+                var projection = d3
+                    .geoMercator()
+                    .center([103.851959, 1.29027])
+                    .fitExtent(
+                        [
+                            [20, 20],
+                            [980, 580],
+                        ],
+                        data[0]
+                    );
+
+                let geopath = d3.geoPath().projection(projection);
+
+                let colorScale = d3
+                    .scaleOrdinal()
+                    .domain([0, 1, 2, 3, 4])
+                    .range(["#33658A", "#86BBD8", "#2F4858", "#F6AE2D", "#F26419"]);
+
+
+                let colorScaleTwo = d3
+                    .scaleOrdinal()
+                    .domain([0, 25502, 51004, 76506, 102008])
+                    .range(["#33658A", "#86BBD8", "#2F4858", "#F6AE2D", "#F26419"]);
+
+
+                let svg = d3.select("svg");
+
+                svg
+                    .append("g")
+                    .attr("id", "districts")
+                    .selectAll("path")
+                    .data(data[0].features)
+                    .enter()
+                    .append("path")
+                    .attr("d", geopath)
+                    .attr("fill", (d) =>
+                        colorScale(getColorCode(d.properties.Name))
+                    )
+                    .on("mouseover", (event, d) => {
+                        d3.select(".tooltip")
+                            .html("<h2><i>" + d.properties.Name + "</h2></i>" + "<h3>Population: " + getPopuluation(d.properties.Name) + "</h3>")
+                            .style("left", 1300 + "px")
+                            .style("top", 650 + "px")
+                            .style("position", "absolute")
+                            .style("opacity", 1)
+                            .style("border", "solid")
+                            .style("padding", "20px")
+
+                        let path = d3.select(event.currentTarget)
+                        path.style("stroke", "pink").style("stroke-width", 2);
+                    })
+                    .on("mouseout", (event, d) => {
+                        d3.select(".tooltip")
+                            .style("opacity", 0);
+                        let path = d3.select(event.currentTarget)
+                        path.style("stroke", "white").style("stroke-width", 0);
+                    });
+
+                var legend = d3.legendColor()
+                    .scale(colorScaleTwo)
+                    .shapeWidth(30)
+                    .title("Legend (Population)")
+
+
+                svg.append("g")
+                    .style("font-size", "11px")
+                    .attr("transform", "translate(0,10)")
+                    .call(legend)
+
+            }
+        );
+    </script>
+</body>
+
+</html>
