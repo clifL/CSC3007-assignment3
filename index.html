@@ -114,8 +114,8 @@
                     .on("mouseover", (event, d) => {
                         d3.select(".tooltip")
                             .html("<h2><i>" + d.properties.Name + "</h2></i>" + "<h3>Population: " + getPopuluation(d.properties.Name) + "</h3>")
-                            .style("left", 1300 + "px")
-                            .style("top", 650 + "px")
+                            .style("left", 1000 + "px")
+                            .style("top", 500 + "px")
                             .style("position", "absolute")
                             .style("opacity", 1)
                             .style("border", "solid")
@@ -141,6 +141,8 @@
                     .style("font-size", "11px")
                     .attr("transform", "translate(0,10)")
                     .call(legend)
+
+
 
             }
         );
